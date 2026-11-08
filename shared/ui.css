@@ -1,0 +1,74 @@
+* { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+html { touch-action: manipulation; height: 100%; }
+body {
+  margin: 0; height: 100%; overflow: hidden;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  background: #FFF5FA; color: #4A3A48;
+}
+input, textarea, select { -webkit-user-select: text; user-select: text; font: inherit; }
+.draggable { touch-action: none; cursor: grab; }
+.dragging { cursor: grabbing; filter: drop-shadow(0 6px 6px rgba(0,0,0,.18)); }
+.btn-pic {
+  min-width: 64px; min-height: 64px; border: none; border-radius: 22px; background: #fff;
+  box-shadow: 0 4px 0 rgba(0,0,0,.08); display: inline-flex; align-items: center; justify-content: center; padding: 8px;
+}
+.btn-pic:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,.08); }
+.card {
+  min-width: 72px; min-height: 72px; padding: 6px 14px; border-radius: 18px; background: #fff;
+  border: 3px solid #FFC2D9; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 40px; font-weight: 700; color: #4A3A48; box-shadow: 0 4px 0 rgba(0,0,0,.08);
+}
+.glow { animation: glow 1s ease-in-out infinite; }
+@keyframes glow { 0%,100% { box-shadow: 0 0 0 0 rgba(255,216,77,.9); } 50% { box-shadow: 0 0 0 12px rgba(255,216,77,0); } }
+.wiggle { animation: wiggle .4s ease-in-out; }
+@keyframes wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+.boing { animation: boing .6s ease-out; transform-origin: 50% 90%; }
+@keyframes boing { 0% { transform: scale(1); } 30% { transform: scale(1.15,.85); } 55% { transform: scale(.92,1.1); } 80% { transform: scale(1.04,.97); } 100% { transform: scale(1); } }
+.hug { animation: hug .9s ease-in-out; transform-origin: 50% 90%; }
+@keyframes hug { 0%,100% { transform: scale(1); } 40%,60% { transform: scale(1.12) rotate(-3deg); } }
+@keyframes tw { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+.tw { animation: tw 1.6s ease-in-out infinite; }
+.tw2 { animation: tw 1.6s ease-in-out .8s infinite; }
+.char svg { overflow: visible; width: 100%; height: auto; display: block; }
+.overlay { position: fixed; inset: 0; z-index: 100; }
+
+/* ---- v2 look ---- */
+.charbox { position: relative; width: 100%; }
+.charimg { width: 100%; height: auto; display: block; -webkit-user-drag: none; pointer-events: none; filter: drop-shadow(0 10px 8px rgba(60,40,60,.25)); transform-origin: 50% 95%; animation: breathe 2.8s ease-in-out infinite; }
+.charbox svg { overflow: visible; width: 100%; height: auto; display: block; }
+.charbox .deco { position: absolute; right: 2%; top: 4%; width: 28%; height: auto; filter: drop-shadow(0 3px 3px rgba(0,0,0,.2)); }
+@keyframes breathe { 0%,100% { transform: scale(1,1); } 50% { transform: scale(1.025,.975); } }
+.walking .charimg { animation: hop .32s ease-in-out infinite; }
+@keyframes hop { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-8%) rotate(3deg); } }
+.scene-bg { position: absolute; inset: -3%; background-size: cover; background-position: center; animation: drift 26s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: scale(1.02) translate(-1%, 0); } to { transform: scale(1.06) translate(1%, -1%); } }
+.cloudshade { position: absolute; width: 45%; height: 32%; border-radius: 50%; background: radial-gradient(closest-side, rgba(40,60,90,.16), transparent); filter: blur(6px); animation: cloud 30s linear infinite; pointer-events: none; }
+@keyframes cloud { from { transform: translateX(-60%); } to { transform: translateX(320%); } }
+.glint { position: absolute; width: 10px; height: 10px; pointer-events: none; background: radial-gradient(circle, #fff 0 30%, rgba(255,255,255,0) 70%); animation: glint 2.4s ease-in-out infinite; }
+@keyframes glint { 0%,100% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1.3); } }
+.board { position: absolute; left: 50%; top: 3%; transform: translateX(-50%); display: flex; align-items: center; gap: 3%; background: rgba(255,255,255,.88); border-radius: 28px; padding: 1% 3%; box-shadow: 0 8px 20px rgba(80,60,100,.15); min-width: 40%; max-width: 74%; z-index: 4; justify-content: center; }
+.board img { height: min(17vh, 15vw); width: auto; filter: drop-shadow(0 6px 6px rgba(0,0,0,.15)); }
+.board .bword { font-size: min(11vh, 9vw); font-weight: 800; letter-spacing: .05em; color: #C9B8D6; white-space: nowrap; }
+.board .bword b { color: #FF6FA5; }
+.board .bbig { font-size: min(14vh, 11vw); font-weight: 800; color: #FF6FA5; text-shadow: 0 4px 0 #fff; }
+.jblock { border-radius: 22px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; background: linear-gradient(160deg, var(--c1, #8EC5FF), var(--c2, #5E9BDB)); box-shadow: inset 0 -8px 0 rgba(0,0,0,.12), inset 0 6px 0 rgba(255,255,255,.45), 0 10px 16px rgba(60,40,80,.22); text-shadow: 0 3px 0 rgba(0,0,0,.12); border: none; }
+.jblock.v { --c1: #FFB8D9; --c2: #F58FB4; }
+.jblock.s { --c1: #FFE7A8; --c2: #F2B65A; color: #6A4A2A; text-shadow: 0 2px 0 rgba(255,255,255,.5); }
+.slot2 { border-radius: 22px; border: 5px dashed #C9A27A; background: rgba(255,255,255,.6); display: flex; align-items: center; justify-content: center; }
+.slot2.next { border-color: #FF6FA5; animation: glow 1.2s ease-in-out infinite; }
+.picimg { width: 100%; height: auto; display: block; filter: drop-shadow(0 8px 8px rgba(0,0,0,.18)); -webkit-user-drag: none; pointer-events: none; }
+textarea, input { font-size: 16px !important; }
+.ring { position: absolute; inset: 18%; border-radius: 50%; border: 4px solid rgba(255,255,255,.9); box-shadow: 0 0 18px rgba(255,236,150,.9); animation: ring 1.8s ease-out infinite; pointer-events: none; }
+@keyframes ring { 0% { transform: scale(.6); opacity: .95; } 100% { transform: scale(1.25); opacity: 0; } }
+
+/* ---- English letters: one-storey a and g (subset of Andika, SIL OFL; see assets/font/OFL.txt) ---- */
+@font-face { font-family: "Island Letters"; src: url("../assets/font/island-letters.woff2") format("woff2"); font-weight: 400 900; font-display: block; }
+.tok-letter { font-family: "Island Letters", "Andika", sans-serif; font-weight: 700; line-height: 1; }
+.tok-word { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; }
+.tok-word img { width: 78%; height: 72%; object-fit: contain; filter: drop-shadow(0 4px 4px rgba(0,0,0,.15)); }
+.tok-word small { font-family: "Island Letters", sans-serif; font-size: 18px; font-weight: 700; color: #6A5A68; text-shadow: none; margin-top: 2px; }
+.pic-card .tok-word img { width: 100%; height: auto; aspect-ratio: 1; }
+.board .bbig.tok-letter { font-family: "Island Letters", sans-serif; letter-spacing: .02em; }
+.board .bup { font-size: .55em; color: #C9A8D6; margin-right: .12em; }
+.board .bword.tok-letter { color: #8a7a88; font-size: min(9vh, 7vw); }
+.jblock.tok-letter { font-family: "Island Letters", sans-serif; }

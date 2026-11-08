@@ -1,0 +1,5 @@
+Sound effects: Kenney Interface Sounds (CC0) https://kenney.nl/assets/interface-sounds
+Voice: Microsoft Edge neural TTS via edge-tts. Korean guide voice ko-KR-SunHiNeural; English words, letter sounds and letter names en-US-JennyNeural
+Images: generated with Aside image generation (Gemini) for the hangul island game and this game
+Letter font: "Island Letters" = basic Latin subset of Andika Bold, Copyright (c) 2004-2022 SIL International, SIL Open Font License 1.1 (assets/font/OFL.txt). Renamed because it is a modified (subset) version.
+Music (all CC0, OpenGameArt): home 'Heavenly Loop' (isaiah658); island1 'Town Theme RPG', island5 'The Field Of Dreams', island6 'New Sunrise', island8 'Medieval: The Old Tower Inn' (Sir Gawain CC0 collection); island2 'Celtic Loop' (stereoscopic); island3 'First Light Particles' (Yoiyami); island4 'Quaint Town' (neonarkade); island7 'At Home - Orchestral' (Wolfgang_)

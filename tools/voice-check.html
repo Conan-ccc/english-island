@@ -1,0 +1,56 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>발음 확인 (영어 섬)</title><link rel="stylesheet" href="../shared/ui.css">
+<style>
+body{overflow:auto;padding:16px;background:#F2FBF8}h1{font-size:20px}h2{margin:22px 0 8px;font-size:18px}p{font-size:15px;line-height:1.5}
+.g{display:flex;flex-wrap:wrap;gap:10px}
+button{min-width:56px;min-height:52px;font-size:18px;border:none;border-radius:14px;background:#fff;box-shadow:0 3px 0 rgba(0,0,0,.08);padding:6px 12px}
+.letter-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#fff;border-radius:16px;padding:8px 12px;margin:8px 0}
+.letter-row .big{font-size:40px;width:56px;text-align:center}
+.letter-row .info{width:120px;font-size:14px;color:#777}
+.letter-row button{background:#F4F1F6}
+.letter-row button.on{background:#7FD8C4;color:#063}
+.letter-row button.play{background:#FFE7A8}
+.saved{font-size:13px;color:#2a7;margin-left:6px}
+</style></head>
+<body><h1>발음 확인 (보호자용)</h1>
+<p>글자 소리는 사람이 들어 보고 고르지 않은 상태예요. 글자마다 <b>▶</b>로 들어 보고, 가장 자연스러운 소리를 눌러 고르세요.
+어느 것도 이상하면 <b>단어로 대신</b>을 고르면 게임에서 그 글자 소리 대신 단어(예: sun, sun)를 들려줘요. 고른 것은 이 아이패드에 바로 저장돼요.
+처음 한 번은 소리가 안 날 수 있어요.</p>
+<h2>글자 소리 (26개)</h2><div id="letters"></div>
+<h2>단어</h2><div class="g" id="words"></div>
+<h2>영어 인사·칭찬</h2><div class="g" id="en"></div>
+<h2>한국어 안내</h2><div class="g" id="ko"></div>
+<script type="module">
+import { speak, unlockSpeech, hasClip, soundChoices, setSoundChoice } from '../shared/speech.js';
+import { unlockAudio } from '../shared/fx.js';
+import { LETTERS, ISLANDS } from '../shared/curriculum.js';
+import { SOUND_TEXT, SOUND_MODE, EN_LINES } from '../shared/en-voice.js';
+import { LINES, SUFFIXES } from '../shared/voice-keys.js';
+let un = false;
+const go = t => { if (!un) { unlockSpeech(); unlockAudio(); un = true; } speak(t); };
+const btn = (label, onClick, cls = '') => { const b = document.createElement('button'); b.textContent = label; b.className = cls; b.onclick = onClick; return b; };
+const order = Object.values(ISLANDS).filter(i => i.kind === 'letter').flatMap(i => i.units.map(u => u.key));
+const box = document.getElementById('letters');
+for (const l of order) {
+  const row = document.createElement('div'); row.className = 'letter-row'; row.dataset.letter = l;
+  row.innerHTML = `<span class="big tok-letter">${l}</span><span class="info">${LETTERS[l].ipa} · ${LETTERS[l].keyword}</span>`;
+  const picks = [];
+  const mark = () => { const c = soundChoices()[l] ?? (SOUND_MODE[l] === 'word' ? 'word' : 1); picks.forEach(p => p.b.classList.toggle('on', String(p.v) === String(c))); };
+  const choose = v => { setSoundChoice(l, v); mark(); row.querySelector('.saved').textContent = '저장됨'; };
+  [1, 2, 3].forEach(i => {
+    const token = i === 1 ? 'en:sound:' + l : `en:soundcand:${l}:${i}`;
+    if (!hasClip(token)) return;
+    row.appendChild(btn('▶ ' + SOUND_TEXT[l][i - 1], () => go(token), 'play'));
+    const b = btn(`${i}번`, () => choose(i)); picks.push({ b, v: i }); row.appendChild(b);
+  });
+  row.appendChild(btn('▶ ' + LETTERS[l].keyword, () => go('en:' + LETTERS[l].keyword), 'play'));
+  const w = btn('단어로 대신', () => choose('word')); picks.push({ b: w, v: 'word' }); row.appendChild(w);
+  row.appendChild(btn('이름 ' + l.toUpperCase(), () => go('en:name:' + l)));
+  row.insertAdjacentHTML('beforeend', '<span class="saved"></span>');
+  box.appendChild(row); mark();
+}
+const words = [...new Set(Object.values(ISLANDS).flatMap(i => i.words))];
+for (const w of words) document.getElementById('words').appendChild(btn(w, () => go('en:' + w)));
+for (const t of [...EN_LINES.good, EN_LINES.hello, EN_LINES.bye]) document.getElementById('en').appendChild(btn(t.slice(3), () => go(t)));
+for (const t of [...Object.values(LINES), ...Object.values(SUFFIXES)]) document.getElementById('ko').appendChild(btn(t, () => go(t)));
+</script></body></html>
