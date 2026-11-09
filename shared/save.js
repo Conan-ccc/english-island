@@ -1,7 +1,7 @@
 // Save state (pure; storage is injected so tests can use a fake).
 // The hangul game lives on the same origin: every key here starts with 'english-island-' and nothing clears the whole storage.
 export const SAVE_KEY = 'english-island-save';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const CODE_PREFIX = 'EI1:';
 const HANGUL_PREFIX = 'HG1:';
 
@@ -12,7 +12,7 @@ export function newIsland() {
 export function defaultState() {
   return {
     version: SAVE_VERSION,
-    settings: { volume: 0.8, music: true, letterNames: false, showUpper: true, excludeCharacter: null },
+    settings: { volume: 0.8, music: true, letterNames: true, showUpper: true, excludeCharacter: null },
     usedCharacters: [],
     subjects: {
       english: { characterId: null, stage: 0, decorations: [], wearing: null, lastRewardDay: null, today: null, islands: {} },
@@ -42,6 +42,8 @@ export function migrate(raw) {
   const st = merge(defaultState(), rest);
   delete st.profile;
   if (st.subjects.hangul) delete st.subjects.hangul;
+  // v2: letter names (A = "ay", C = "see") are on by default; turn them on once for older saves
+  if (v < 2) st.settings.letterNames = true;
   st.version = SAVE_VERSION;
   for (const [n, isl] of Object.entries(st.subjects.english.islands || {})) {
     st.subjects.english.islands[n] = merge(newIsland(), isl);

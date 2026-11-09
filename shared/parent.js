@@ -81,7 +81,7 @@ export function openParentPanel(state, onChange) {
     ${state.saveError ? '<div class="pp-warn" style="background:#FFE3E3;color:#B00020;padding:10px;border-radius:12px;margin-top:12px">저장이 안 되고 있어요. 저장 공간을 확인하거나 백업 코드를 보관해 주세요.</div>' : ''}
     <h3>소리</h3><input class="pp-vol" type="range" min="0" max="1" step="0.1" value="${s.volume}" style="width:100%">
     ${check('pp-music', s.music !== false, '배경음악 켜기')}
-    ${check('pp-names', !!s.letterNames, '글자 이름도 들려주기 (예: "ess, sss, sun") — 기본은 꺼짐, 소리만')}
+    ${check('pp-names', !!s.letterNames, '글자 이름도 들려주기 (예: "ess, sss, sun") — 기본은 켜짐')}
     ${check('pp-upper', s.showUpper !== false, '대문자도 옆에 작게 보이기 (예: "S s")')}
     <h3>한글 섬 친구</h3><div style="font-size:13px;color:#888">한글 섬에서 키우는 친구를 고르면, 영어 섬에서는 다른 친구가 태어나요.</div>
     <select class="pp-exclude" style="padding:8px;border-radius:10px;margin-top:6px"><option value="">고르지 않음</option>${CHARACTERS.map(c => `<option value="${c.id}" ${s.excludeCharacter === c.id ? 'selected' : ''}>${esc(c.name)} (${esc(c.kind)})</option>`).join('')}</select>
