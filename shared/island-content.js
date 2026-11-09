@@ -48,11 +48,12 @@ export function eligible(n, mech, key) {
   return true;
 }
 
-// Decoy letters: at most one look-alike, never a letter with the same sound as the target or as another decoy
-export function decoysFor(key, pool, rng, n) {
+// Decoy letters: at most one look-alike, never a letter with the same sound as the target or as another decoy,
+// never one of the avoided letters (bridge: letters already in the word)
+export function decoysFor(key, pool, rng, n, avoid = []) {
   const look = LOOKALIKE[key] || [];
   const out = [];
-  const ok = x => x !== key && !sameSound(key, x) && !out.some(y => y === x || sameSound(y, x));
+  const ok = x => x !== key && !avoid.includes(x) && !sameSound(key, x) && !out.some(y => y === x || sameSound(y, x));
   for (const x of shuffle(look, rng)) { if (ok(x)) { out.push(x); break; } }
   for (const x of shuffle(pool, rng)) { if (out.length >= n) break; if (!look.includes(x) && ok(x)) out.push(x); }
   return out.slice(0, n);
@@ -97,8 +98,9 @@ export function buildMechs(n, island, settings = {}, rng = Math.random, islands 
   const T = MECH_TYPE;
   const review = mech => reviewCandidates(n, islands).filter(k => eligible(n, mech, k));
   const recOf = k => islands[String(homeIsland(k, n))] || (homeIsland(k, n) === n ? island : noRecord);
-  // revisit of something already mastered: ask by ear only, except c/k (same sound, the picture is needed)
-  const earOnly = (k, isReview) => (isReview || isMastered(recOf(k), k)) && !SAME_SOUND[k];
+  // revisit of something already mastered: ask by ear only, except c/k (same sound, the picture is needed).
+  // A review unit not mastered yet (an island skipped) is asked with its picture like any new question.
+  const earOnly = k => isMastered(recOf(k), k) && !SAME_SOUND[k];
   const line = k => unitLine(U(k), settings, SOUND_MODE);
   const optionsFor = k => kind === 'letter' ? shuffle([k, ...decoysFor(k, pool, rng, 3)], rng) : shuffle([k, ...wordDecoys(k, picWords, rng, 3)], rng);
 
@@ -106,7 +108,7 @@ export function buildMechs(n, island, settings = {}, rng = Math.random, islands 
     fruit: () => {
       const picks = pickFor(island, keys, 4, rng, T.fruit, review('fruit'));
       return { rounds: picks.map(k => {
-        const listenOnly = earOnly(k, picks.review.includes(k));
+        const listenOnly = earOnly(k);
         return { target: k, show: listenOnly ? null : show(U(k)), reveal: show(U(k)), line: line(k), prompt: askLine(U(k), SUFFIXES.pickFruit, listenOnly), options: optionsFor(k), listenOnly };
       }) };
     },
@@ -115,7 +117,7 @@ export function buildMechs(n, island, settings = {}, rng = Math.random, islands 
         const ok = keys.filter(k => eligible(n, 'bridge', k));
         return { mode: 'initial', rounds: pickFor(island, ok, 3, rng, T.bridge).map(k => {
           const u = U(k);
-          return { target: k, word: u.word, pic: u.pic, letters: [...u.word], blank: 0, choices: shuffle([k, ...decoysFor(k, pool.filter(x => !u.word.includes(x)), rng, 2)], rng), line: line(k), prompt: ['en:' + u.word, LINES.firstSound] };
+          return { target: k, word: u.word, pic: u.pic, letters: [...u.word], blank: 0, choices: shuffle([k, ...decoysFor(k, pool, rng, 2, [...u.word])], rng), line: line(k), prompt: ['en:' + u.word, LINES.firstSound] };
         }) };
       }
       const ok = keys.filter(k => eligible(n, 'bridge', k));
@@ -139,12 +141,12 @@ export function buildMechs(n, island, settings = {}, rng = Math.random, islands 
     },
     find: () => {
       const t = pickFor(island, keys, 1, rng, T.find)[0];
-      const listenOnly = earOnly(t, false);
+      const listenOnly = earOnly(t);
       const decoys = kind === 'letter' ? decoysFor(t, pool, rng, 3) : wordDecoys(t, picWords, rng, 3);
       return { target: t, decoys, count: 5, show: listenOnly ? null : show(U(t)), reveal: show(U(t)), line: line(t), prompt: askLine(U(t), SUFFIXES.findAll, listenOnly), listenOnly };
     },
     rise: () => ({ rounds: pickFor(island, keys, 2, rng, T.rise).map(k => {
-      const listenOnly = earOnly(k, false);
+      const listenOnly = earOnly(k);
       const decoys = kind === 'letter' ? decoysFor(k, pool, rng, 3) : wordDecoys(k, picWords, rng, 3);
       return { target: k, decoys, need: 4, show: listenOnly ? null : show(U(k)), reveal: show(U(k)), line: line(k), prompt: askLine(U(k), SUFFIXES.findAll, listenOnly), listenOnly };
     }) }),

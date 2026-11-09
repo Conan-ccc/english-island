@@ -5,6 +5,9 @@ import { CHARACTERS } from './characters.js';
 import { islandUnits } from './island-content.js';
 import { ISLANDS, LETTERS } from './curriculum.js';
 
+// "Mark as cleared" grows the character one stage, the same as clearing the island in play
+export const clearStage = stage => Math.min(7, stage + 1);
+
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // Long-press the top-right 64px zone for 2s, then answer a simple addition.
@@ -129,7 +132,7 @@ export function openParentPanel(state, onChange) {
       if (!confirm(n + '섬을 완료로 처리할까요? 캐릭터가 한 단계 자라요.')) return;
       const h = state.subjects.english;
       h.islands[n].cleared = true;
-      h.stage = Math.min(7, Math.max(h.stage, Number(n)));
+      h.stage = clearStage(h.stage);
       onChange(state); ov.remove(); return;
     }
     if (t.closest('.pp-close')) { ov.remove(); return; }
