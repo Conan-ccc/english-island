@@ -4,6 +4,7 @@ import { scene, shuffle, at, el, glow, unglow, cheer, buddy, wait, ask, board, p
 import { isLetter } from '../english.js';
 
 const SPOTS = [[24, 40], [38, 30], [52, 38], [33, 52], [47, 55], [60, 47]];
+const WORD_SPOTS = [[18, 36], [34, 56], [50, 34], [65, 53]];
 
 export async function run(ctx, { rounds }) {
   scene(ctx, 'tree');
@@ -16,7 +17,7 @@ export async function run(ctx, { rounds }) {
   for (const r of rounds) {
     board(ctx, r.show);
     ctx.boardLine = r.line;
-    const spots = shuffle(SPOTS, ctx.rng);
+    const spots = shuffle(r.options.every(isLetter) || r.options.length > WORD_SPOTS.length ? SPOTS : WORD_SPOTS, ctx.rng);
     const fruits = r.options.map((t, i) => {
       const letter = isLetter(t);
       const size = letter ? 112 : 150;

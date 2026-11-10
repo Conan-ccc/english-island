@@ -24,7 +24,8 @@ export function createTracer(container, key, opts = {}) {
   svg.append(guide, doneG, ink, dot);
   container.appendChild(svg);
 
-  let idx = 0, pts = null, pid = null, finished = false;
+  let idx = 0, pts = null, pid = null, finished = false, fails = 0;
+  const drawn = p => { let s = 0; for (let i = 1; i < p.length; i++) s += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); return s; };
   const place = () => {
     if (idx >= strokes.length) { dot.style.display = 'none'; return; }
     const [x, y] = strokes[idx][0];
@@ -64,9 +65,12 @@ export function createTracer(container, key, opts = {}) {
   const up = e => {
     if (e.pointerId !== pid) return;
     pid = null;
-    const res = matchStroke(pts, strokes[idx], tol);
+    const res = matchStroke(pts, strokes[idx], tol * (1 + 0.3 * Math.min(fails, 3)));
+    const helped = !res.ok && fails >= 3 && drawn(pts) >= 12;
     ink.setAttribute('d', '');
-    if (res.ok) {
+    if (res.ok || helped) {
+      fails = 0;
+      if (helped) opts.onHelp?.();
       doneG.appendChild(mk('path', { d: d(strokes[idx]), stroke: '#FF8FB1', 'stroke-width': String(W), 'stroke-linecap': 'round', 'stroke-linejoin': 'round', fill: 'none' }));
       playSfx('sparkle');
       opts.onStroke?.(idx, true);
@@ -74,6 +78,7 @@ export function createTracer(container, key, opts = {}) {
       place();
       if (idx >= strokes.length) { finished = true; opts.onComplete?.(); }
     } else {
+      fails += 1;
       opts.onStroke?.(idx, false);
       showWay(strokes[idx]);
       speak('이렇게 해볼까?');

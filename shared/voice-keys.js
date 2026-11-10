@@ -19,7 +19,8 @@ export const LINES = {
   welcome: '영어 섬에 왔어! 반짝이는 곳을 눌러볼까?', allDone: '이 섬은 다 했어! 다른 섬에도 가볼까?',
   pairs: '같은 짝을 찾아볼까?', sameSound: '같은 소리를 찾아볼까?',
   firstSound: '첫소리를 찾아줄래?', blend: '소리를 합쳐 볼까?', listen: '잘 듣고 골라볼까?', giftWant: '친구가 뭘 갖고 싶대?',
+  scratch: '쓱쓱 문질러 볼까?', party: '풍선을 터뜨려 봐!', helpTrace: '내가 도와줄게!',
 };
 
 // Endings spoken after an English item: "sss" + "열매를 따볼까?"
-export const SUFFIXES = { pickFruit: '열매를 따볼까?', findAll: '모두 찾아볼까?', giveCard: '카드를 줄래?' };
+export const SUFFIXES = { pickFruit: '열매를 따볼까?', findAll: '모두 찾아볼까?', giveCard: '카드를 줄래?', catchIt: '떨어지는 걸 받아볼까?', hop: '돌을 밟고 건너가 볼까?', which: '어느 것일까?' };

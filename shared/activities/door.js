@@ -17,10 +17,10 @@ export async function run(ctx, { keys, unitOf = {}, lines = {}, guideOpacity = 0
     pad.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"><line x1="4" x2="96" y1="${y(45)}" y2="${y(45)}" stroke="#E7D8EE" stroke-width="1" stroke-dasharray="3 3"/><line x1="4" x2="96" y1="${y(80)}" y2="${y(80)}" stroke="#D9C2E4" stroke-width="1.4"/></svg>`);
     ctx.stage.appendChild(pad);
     ctx.prompt = ctx.speakLines.traceDoor;
-    await ctx.speak(ctx.boardLine);
-    ctx.speak(ctx.prompt);
     let tracer;
-    await new Promise(done => { tracer = createTracer(pad, key, { guideOpacity, width: key.length === 1 ? 10 : 6, onComplete: done }); });
+    const traced = new Promise(done => { tracer = createTracer(pad, key, { guideOpacity, width: key.length === 1 ? 10 : 6, onComplete: done, onHelp: () => ctx.speak(ctx.speakLines.helpTrace) }); });
+    ctx.speak([...[ctx.boardLine].flat(), ctx.prompt]);
+    await traced;
     cheer(ctx, pad); tick();
     if (unitOf[key]) { ctx.onSuccess(unitOf[key], 'trace'); results.push({ item: unitOf[key], type: 'trace' }); }
     await ctx.speak(ctx.boardLine);

@@ -5,6 +5,8 @@
 - 주소: https://conan-ccc.github.io/english-island/
 - 발음 확인(보호자용): https://conan-ccc.github.io/english-island/tools/voice-check.html
 
+놀이: 섬마다 장소가 6곳 있고, 열매 따기·둥실둥실 잡기·선물 주기·찾기·따라 쓰기·첫소리/소리 합치기·짝 맞추기에 더해 떨어지는 것 받기·징검다리 건너기·쓱쓱 문질러 찾기가 같은 장소에서 번갈아 나온다. 놀이를 하나 끝내면 풍선 터뜨리기가 잠깐 나온다.
+
 배우는 것: 1~6섬은 영어 소문자 26개의 소리(파닉스)와 그림 단어, 7섬은 소리 합치기(c-a-t → cat), 8섬은 가족·인사 단어(mom, dad, baby, grandma, grandpa, hello). 안내는 한국어, 배우는 소리와 단어는 영어 목소리로 나온다.
 
 ## 아이패드 설치

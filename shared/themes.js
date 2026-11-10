@@ -2,7 +2,14 @@
 // Mechanics: fruit (drag the matching item to a target), bridge (first sound / blend letters into a word),
 // gift (give the picture card the friend asks for), door (trace), find (tap all matching),
 // rise (tap the matching items while they float/fall), pairs (memory: picture <-> letter or word).
-export const MECH_TYPE = { fruit: 'fruit', bridge: 'bridge', gift: 'gift', door: 'trace', find: 'find', rise: 'rise', pairs: 'pairs' };
+// Second plays that take turns with the first one at the same place (same background and skin), so a place is not
+// the same game every time: catch (slide the basket under falling items) with fruit, hop (stepping stones) with bridge,
+// scratch (rub the fog off a picture, then pick its letter or word) with find.
+export const MECH_TYPE = { fruit: 'fruit', bridge: 'bridge', gift: 'gift', door: 'trace', find: 'find', rise: 'rise', pairs: 'pairs', catch: 'catch', hop: 'hop', scratch: 'scratch' };
+export const ALT_MECH = { fruit: 'catch', bridge: 'hop', find: 'scratch' };
+// The plays of a place in the order they come up (the new one first), and the one for the n-th visit
+export const mechsOf = place => (ALT_MECH[place.mech] ? [ALT_MECH[place.mech], place.mech] : [place.mech]);
+export const mechAt = (place, visits = 0) => { const seq = mechsOf(place); return seq[Math.max(0, Math.floor(visits) || 0) % seq.length]; };
 
 export const THEMES = {
   1: {

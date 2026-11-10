@@ -1,7 +1,7 @@
 // Builds activity parameters for any island and mechanic (pure; rng injected)
 import { ISLANDS, WORDS, LOOKALIKE, SAME_SOUND, earlierKeys, unitLine, unitOf, homeIsland, initialOf, initialBlankOk } from './curriculum.js';
 import { isMastered, MASTERY_COUNT } from './mastery.js';
-import { themeOf, MECH_TYPE } from './themes.js';
+import { themeOf, MECH_TYPE, mechAt } from './themes.js';
 import { strokesFor } from './strokes.js';
 import { SOUND_MODE } from './en-voice.js';
 import { LINES, SUFFIXES } from './voice-keys.js';
@@ -102,7 +102,8 @@ export function buildMechs(n, island, settings = {}, rng = Math.random, islands 
   // A review unit not mastered yet (an island skipped) is asked with its picture like any new question.
   const earOnly = k => isMastered(recOf(k), k) && !SAME_SOUND[k];
   const line = k => unitLine(U(k), settings, SOUND_MODE);
-  const optionsFor = k => kind === 'letter' ? shuffle([k, ...decoysFor(k, pool, rng, 3)], rng) : shuffle([k, ...wordDecoys(k, picWords, rng, 3)], rng);
+  const decoys = (k, c) => (kind === 'letter' ? decoysFor(k, pool, rng, c) : wordDecoys(k, picWords, rng, c));
+  const optionsFor = (k, c = 3) => shuffle([k, ...decoys(k, c)], rng);
 
   return {
     fruit: () => {
@@ -150,6 +151,22 @@ export function buildMechs(n, island, settings = {}, rng = Math.random, islands 
       const decoys = kind === 'letter' ? decoysFor(k, pool, rng, 3) : wordDecoys(k, picWords, rng, 3);
       return { target: k, decoys, need: 4, show: listenOnly ? null : show(U(k)), reveal: show(U(k)), line: line(k), prompt: askLine(U(k), SUFFIXES.findAll, listenOnly), listenOnly };
     }) }),
+    // falling items, slide the basket under the matching ones
+    catch: () => ({ rounds: pickFor(island, keys, 2, rng, T.catch).map(k => {
+      const listenOnly = earOnly(k);
+      return { target: k, decoys: decoys(k, 3), need: 3, show: listenOnly ? null : show(U(k)), reveal: show(U(k)), line: line(k), prompt: askLine(U(k), SUFFIXES.catchIt, listenOnly), listenOnly };
+    }) }),
+    // stepping stones: three choices a step
+    hop: () => ({ rounds: pickFor(island, keys, 4, rng, T.hop, review('hop')).map(k => {
+      const listenOnly = earOnly(k);
+      return { target: k, options: optionsFor(k, 2), show: listenOnly ? null : show(U(k)), reveal: show(U(k)), line: line(k), prompt: askLine(U(k), SUFFIXES.hop, listenOnly), listenOnly };
+    }) }),
+    // rub out the hidden picture, hear its word, then pick its letter (letter islands) or its written word (this island's words)
+    scratch: () => ({ rounds: pickFor(island, keys, 3, rng, T.scratch).map(k => {
+      const u = U(k);
+      const options = kind === 'letter' ? optionsFor(k, 2) : shuffle([k, ...shuffle(keys.filter(w => w !== k), rng).slice(0, 2)], rng);
+      return { target: k, word: u.word, pic: u.pic, options, reveal: show(u), line: line(k), prompt: [...soundPart(u), SUFFIXES.which] };
+    }) }),
     pairs: () => {
       const picks = pickFor(island, keys, 4, rng, T.pairs, review('pairs'));
       return {
@@ -161,9 +178,9 @@ export function buildMechs(n, island, settings = {}, rng = Math.random, islands 
   };
 }
 
-// Places of an island with their params builder (theme decides which mechanic each place runs)
+// Places of an island with their params builder (theme decides which mechanics take turns at each place)
 export function buildPlaces(n, island, settings, rng = Math.random, islands = {}) {
   const mechs = buildMechs(n, island, settings, rng, islands);
-  return Object.fromEntries(themeOf(n).places.map(p => [p.id, () => mechs[p.mech]()]));
+  return Object.fromEntries(themeOf(n).places.map(p => [p.id, () => mechs[mechAt(p, island.plays?.[p.id])]()]));
 }
 export const placeIdsOf = n => themeOf(n).places.map(p => p.id);

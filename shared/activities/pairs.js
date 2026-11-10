@@ -38,7 +38,7 @@ export async function run(ctx, { kind = 'pic-letter', prompt, pairs }) {
       ctx.speak(x.c.side === 'pic' ? ['en:' + x.c.p.word] : x.c.p.say);
       if (!first) { first = x; return; }
       const a = first; first = null; busy = true;
-      await wait(650);
+      await wait(a.c.i === x.c.i ? 550 : 1200);
       if (a.c.i === x.c.i) {
         a.done = x.done = true;
         [a, x].forEach(y => { y.card.style.transition = 'transform .4s'; y.card.style.transform = 'scale(1.08)'; });

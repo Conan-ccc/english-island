@@ -15,11 +15,13 @@ export async function run(ctx, { rounds }) {
     ctx.boardLine = r.line;
     const field = el('div', 'position:absolute;inset:0;overflow:hidden;z-index:3', '', 'field');
     ctx.stage.appendChild(field);
-    let got = 0, misses = 0, alive = true, lastTarget = null;
+    let got = 0, misses = 0, alive = true, lastTarget = null, sinceTarget = 0;
     ask(ctx, r.prompt, null);
     const spawn = () => {
       if (!alive) return;
-      const isTarget = ctx.rng() < 0.45;
+      // never a long wait for the right one: after two others the next is always a match
+      const isTarget = sinceTarget >= 2 || ctx.rng() < 0.45;
+      sinceTarget = isTarget ? 0 : sinceTarget + 1;
       const text = isTarget ? r.target : shuffle(r.decoys, ctx.rng)[0];
       const letter = isLetter(text);
       const size = letter ? 120 : 136;
@@ -38,7 +40,7 @@ export async function run(ctx, { rounds }) {
       anim.onfinish = () => it.remove();
       if (isTarget) lastTarget = it;
       it.addEventListener('pointerdown', () => {
-        if (it.dataset.done) return;
+        if (it.dataset.done || !alive || got >= r.need) return;
         if (it.dataset.text === r.target) {
           it.dataset.done = '1'; anim.pause();
           const [cx, cy] = center(it); ctx.burst(cx, cy, 'stars'); ctx.sfx('sparkle');

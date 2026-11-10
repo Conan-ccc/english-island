@@ -9,8 +9,12 @@ import { LINES } from './voice-keys.js';
 import { ISLANDS, unitOf, unitLine, homeIsland } from './curriculum.js';
 import { SOUND_MODE, EN_LINES } from './en-voice.js';
 import { buildMechs, islandUnits, creditable } from './island-content.js';
-import { themeOf, MECH_TYPE } from './themes.js';
-import { el, wait, asset, tokenHtml } from './activities/common.js';
+import { themeOf, MECH_TYPE, mechAt } from './themes.js';
+import { el, wait, asset, tokenHtml, ask, glow } from './activities/common.js';
+import { balloonParty } from './party.js';
+import * as catchPlay from './activities/catch.js';
+import * as hop from './activities/hop.js';
+import * as scratch from './activities/scratch.js';
 import * as fruit from './activities/fruit.js';
 import * as bridge from './activities/bridge.js';
 import * as gift from './activities/gift.js';
@@ -24,7 +28,8 @@ export const today = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-const RUNNERS = { fruit, bridge, gift, door, find, rise, pairs };
+const RUNNERS = { fruit, bridge, gift, door, find, rise, pairs, catch: catchPlay, hop, scratch };
+const IDLE_MS = 9000; // nothing touched and nothing said for this long: say the question again
 const FALLBACK_SPOTS = [[22, 25], [50, 15], [82, 32], [80, 72], [30, 70], [62, 60]];
 const HOME_ICON = '<svg viewBox="0 0 60 60" width="48" height="48"><path d="M8 30 L30 10 L52 30 V52 H8Z" fill="#DCEBFF" stroke="#8EC5FF" stroke-width="3"/><rect x="24" y="36" width="12" height="16" fill="#8EC5FF"/></svg>';
 const BACK_ICON = '<svg viewBox="0 0 60 60" width="52" height="52"><circle cx="30" cy="30" r="26" fill="#fff"/><path d="M34 18 L20 30 L34 42" stroke="#C98AA8" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -74,7 +79,9 @@ export async function startIsland(n) {
   const kind = ISLANDS[n].kind;
   const lineOf = u => unitLine(unitOf(u, kind), state.settings, SOUND_MODE);
   const mechs = buildMechs(n, island, state.settings, Math.random, H.islands);
-  const credit = Object.fromEntries(theme.places.map(p => [p.id, creditable(n, p.mech)]));
+  if (!island.plays) island.plays = {};
+  // the play a place runs on this visit: places with two plays take turns
+  const mechOf = p => mechAt(p, island.plays[p.id]);
   let busy = false, unlocked = false;
   preloadSfx();
   preloadSpeech([...Object.values(LINES), ...EN_LINES.good, EN_LINES.hello, EN_LINES.bye, ...units.map(lineOf)]);
@@ -85,7 +92,7 @@ export async function startIsland(n) {
     speak([EN_LINES.hello, island.cleared ? LINES.allDone : LINES.welcome]);
   };
 
-  const needOf = p => placeNeed(island, units, credit[p.id], MECH_TYPE[p.mech]);
+  const needOf = p => placeNeed(island, units, creditable(n, mechOf(p)), MECH_TYPE[mechOf(p)]);
 
   function missionBar() {
     const done = units.filter(u => isMastered(island, u)).length;
@@ -111,7 +118,7 @@ export async function startIsland(n) {
           const need = needs[p.id];
           return `<div class="place" data-id="${p.id}" style="position:absolute;left:${x}%;top:${y}%;width:15%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;cursor:pointer">
             ${need > 0 ? '<div class="ring"></div>' : ''}
-            <div style="position:absolute;right:4%;top:2%;pointer-events:none" class="${need > 0 ? 'tw' : ''}">${need > 0 ? SPARK : CHECK}</div>
+            <div style="position:absolute;right:4%;top:2%;pointer-events:none" class="${need > 0 ? 'pulse' : ''}">${need > 0 ? SPARK : CHECK}</div>
             ${showBest && p.id === best.id ? (y < 30
               ? `<div class="arrow" style="position:absolute;left:50%;bottom:-48%;translate:-50% 0;pointer-events:none"><div style="rotate:180deg">${ARROW}</div></div>`
               : `<div class="arrow" style="position:absolute;left:50%;top:-38%;translate:-50% 0;pointer-events:none">${ARROW}</div>`) : ''}</div>`;
@@ -139,7 +146,7 @@ export async function startIsland(n) {
       const tx = g ? spots[g.dataset.id][0] : ((e.clientX - r.left) / r.width) * 100;
       const ty = g ? spots[g.dataset.id][1] + 4 : ((e.clientY - r.top) / r.height) * 100;
       const cx = parseFloat(walker.style.left), cy = parseFloat(walker.style.top);
-      const ms = Math.max(350, Math.hypot((tx - cx) * r.width / 100, (ty - cy) * r.height / 100) * 4);
+      const ms = Math.min(1300, Math.max(300, Math.hypot((tx - cx) * r.width / 100, (ty - cy) * r.height / 100) * 2.2));
       busy = true;
       walker.style.transition = `left ${ms}ms linear, top ${ms}ms linear`;
       walker.style.left = tx + '%'; walker.style.top = ty + '%';
@@ -181,10 +188,12 @@ export async function startIsland(n) {
     ov.remove();
   }
 
-  async function openPlace(id) {
+  async function openPlace(id, forceMech) {
     const place = theme.places.find(p => p.id === id);
-    if (!place || !RUNNERS[place.mech]) return;
+    const mech = place && (forceMech || mechOf(place));
+    if (!place || !RUNNERS[mech]) return;
     markVisit(island, id, today());
+    island.plays[id] = (island.plays[id] || 0) + 1;
     if (!H.today.places.includes(id)) H.today.places.push(id);
     saveState(state);
     const stage = el('div', 'background:#fff;overflow:hidden', '', 'overlay stage');
@@ -195,15 +204,35 @@ export async function startIsland(n) {
     stage.appendChild(back);
     let closed = false;
     const closedP = new Promise(res => back.addEventListener('click', () => { closed = true; res('closed'); }));
+    let talking = 0, lastAct = Date.now(), nudges = 0;
     const ctx = {
       stage: inner, phrase, sfx: playSfx, burst, rng: Math.random, speakLines: LINES, skin: place.skin || {}, settings: state.settings,
-      speak: t => (closed ? Promise.resolve(true) : speak(t)),
+      speak: t => {
+        if (closed) return Promise.resolve(true);
+        talking += 1;
+        return speak(t).finally(() => { talking -= 1; lastAct = Date.now(); });
+      },
       characterHtml: charHtml(H.characterId, H.stage, { decoration: H.wearing }), onSuccess,
     };
-    const outcome = await Promise.race([RUNNERS[place.mech].run(ctx, mechs[place.mech]()).then(() => 'done').catch(err => { console.error(err); return 'error'; }), closedP]);
+    // a child who is stuck or looking away hears the question again; the second time the answer lights up
+    for (const ev of ['pointerdown', 'pointermove', 'pointerup']) stage.addEventListener(ev, () => { lastAct = Date.now(); if (ev === 'pointerdown') nudges = 0; }, true);
+    const idle = setInterval(() => {
+      if (closed || talking > 0 || !ctx.prompt || nudges >= 2 || Date.now() - lastAct < IDLE_MS) return;
+      nudges += 1; lastAct = Date.now();
+      ask(ctx, ctx.prompt, ctx.promptTarget);
+      if (nudges >= 2 && ctx.promptTarget?.isConnected) glow(ctx.promptTarget);
+    }, 1000);
+    const outcome = await Promise.race([RUNNERS[mech].run(ctx, mechs[mech]()).then(() => 'done').catch(err => { console.error(err); return 'error'; }), closedP]);
+    clearInterval(idle);
+    closed = true;
     stopSpeech();
     stage.remove();
-    if (outcome === 'done') await giveReward();
+    if (outcome === 'done') {
+      speak(LINES.party);
+      await balloonParty({ sfx: playSfx, burst, characterHtml: ctx.characterHtml });
+      stopSpeech();
+      await giveReward();
+    }
     const pr = islandProgress(island, units, []);
     if (pr.cleared && !island.cleared) return clearIsland();
     renderMap();
@@ -219,6 +248,6 @@ export async function startIsland(n) {
     location.href = `../index.html?evolve=${from}-${to}`;
   }
 
-  window.__island = { state, island, openPlace, units, theme, title: ISLANDS[n].title };
+  window.__island = { state, island, openPlace, units, theme, title: ISLANDS[n].title, mechOf: id => mechOf(theme.places.find(p => p.id === id)) };
   renderMap();
 }

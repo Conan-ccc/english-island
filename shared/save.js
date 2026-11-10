@@ -6,7 +6,7 @@ export const CODE_PREFIX = 'EI1:';
 const HANGUL_PREFIX = 'HG1:';
 
 export function newIsland() {
-  return { cleared: false, visited: [], days: [], mastery: {} };
+  return { cleared: false, visited: [], days: [], mastery: {}, plays: {} };
 }
 
 export function defaultState() {
